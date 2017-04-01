@@ -36,7 +36,13 @@ public class ClientHandler implements Runnable {
             while (true) {
                 System.out.println("Waiting for input from client " + id + "...");
                 input = in.readLine();
+
+                // scanner returns null if the socket it closed after we began readings
+                // treat this like any other IOException for now
+                if (input == null) throw new IOException();
+
                 System.out.println("Recieved data from client " + id + ": " + input);
+
 
                 if (input.equals("quit")) {
                     out.println("Goodbye!\n");
@@ -47,6 +53,7 @@ public class ClientHandler implements Runnable {
 
         } catch (IOException e) {
             e.printStackTrace();
+            System.err.println("IOException... likely socket was closed by client " + id);
         }
     }
 }
