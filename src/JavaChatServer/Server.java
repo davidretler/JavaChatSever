@@ -7,12 +7,12 @@ import java.net.Socket;
 /**
  * Created by david on 3/29/17.
  */
-public class Server {
+public class Server implements Runnable {
 
     private int port = 4444;
 
 
-    public void start() {
+    public void run() {
         System.out.println("Starting server");
 
         ServerSocket serverSocket = null;
@@ -26,6 +26,8 @@ public class Server {
         }
 
         // keep accepting new clients and spawn new threads to handle them
+        System.out.println("Listening for clients on port " + port);
+
         int n = 0; // keep track of number of clients
         while (true) {
 

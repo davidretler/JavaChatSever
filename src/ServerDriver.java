@@ -9,7 +9,7 @@ public class ServerDriver {
 
         Server myServer = new Server();
 
-        myServer.start();
+        new Thread(myServer).start();
 
     }
 
