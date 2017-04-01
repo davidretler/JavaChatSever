@@ -11,10 +11,23 @@ public class Server implements Runnable {
 
     private int port = 4444;
 
+    private MessageBroadcaster broadcaster;
+    private MessageQueue messageQueue;
+
+    public Server() {
+        messageQueue = new MessageQueue();
+        broadcaster = new MessageBroadcaster(messageQueue);
+    }
 
     public void run() {
         System.out.println("Starting server");
 
+
+        System.out.println("Creating message broadcaster thread");
+        new Thread(broadcaster).start();
+
+
+        System.out.println("Listening for clients on port " + port);
         ServerSocket serverSocket = null;
 
         // Create a server socket to begin listening on the port
@@ -26,7 +39,6 @@ public class Server implements Runnable {
         }
 
         // keep accepting new clients and spawn new threads to handle them
-        System.out.println("Listening for clients on port " + port);
 
         int n = 0; // keep track of number of clients
         while (true) {
@@ -42,7 +54,10 @@ public class Server implements Runnable {
             }
 
             if (clientSocket != null) {
-                new Thread(new ClientHandler(clientSocket, n)).start();
+                System.out.println("New client (" + n + ") accepted.");
+                ClientHandler handler = new ClientHandler(clientSocket, n, broadcaster);
+                broadcaster.addHandlder(handler);
+                new Thread(handler).start();
                 n++;
             }
 

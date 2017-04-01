@@ -1,5 +1,6 @@
 package JavaChatServer;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -14,7 +15,12 @@ public class MessageQueue {
 
     // queue of messages
     private BlockingQueue<Message> queue;
+    private final int capacity = 100; // max size of queue
 
+
+    public MessageQueue() {
+        queue = new ArrayBlockingQueue<Message>(capacity);
+    }
 
     public void broadcast(Message message) {
         queue.add(message);

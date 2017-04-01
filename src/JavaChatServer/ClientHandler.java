@@ -14,12 +14,15 @@ public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private int id;
 
-    private MessageQueue queue = new MessageQueue();
+    private int timeout = 100;
 
-    ClientHandler(Socket socket, int n) {
+    private MessageQueue queue = new MessageQueue();
+    private MessageBroadcaster broadcaster;
+
+    ClientHandler(Socket socket, int n, MessageBroadcaster b) {
         this.clientSocket = socket;
         id = n;
-
+        broadcaster = b;
         System.out.println("Starting new server thread to handel client number " + id + ".");
     }
 
@@ -27,7 +30,6 @@ public class ClientHandler implements Runnable {
     public void run() {
 
         // listen for input asynchronously
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -37,7 +39,6 @@ public class ClientHandler implements Runnable {
                 try (
                         // store output stream for the socket connection
                         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-
                         // input stream for socket connection
                         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 ) {
@@ -55,8 +56,16 @@ public class ClientHandler implements Runnable {
                         if (input.equals("quit")) {
                             out.println("Goodbye!\n");
                             break;
+                        } else {
+                            // echo data back to client
+                            out.println("Echo: " + input);
+
+                            // broadcast message
+                            System.out.println("Broadcasting message from client " + id);
+                            Message m = new Message(input, id);
+                            broadcaster.broadcast(m);
+
                         }
-                        out.println("Echo: " + input);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -64,9 +73,38 @@ public class ClientHandler implements Runnable {
             }
         }).start();
 
+        // relay broadcasted message asynchronously
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (
+                        // store output stream for the socket connection
+                        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                ) {
+                    while (true) {
+                        Message message = queue.consume();
 
+                        if (message != null) {
+                            // a message was broadcast, print it
+
+                            String m = "Message from client " + message.getClientID() + ": " + message.getMessageText();
+
+                            out.println(m);
+
+                        } else {
+                            try {
+                                Thread.sleep(timeout);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
-
 
     // Receive message
     void receive(Message m) {
