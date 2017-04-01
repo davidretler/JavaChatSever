@@ -1,9 +1,6 @@
 package JavaChatServer;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -18,34 +15,35 @@ public class Server {
     public void start() {
         System.out.println("Starting server");
 
-        try (
-                // start listening on socker
-                ServerSocket serverSocket = new ServerSocket(port);
-                // get a socket connection
-                Socket clientSocket = serverSocket.accept();
-                // store output stream for the socket connection
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                // input stream for socket connection
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        ) {
-            String input;
+        ServerSocket serverSocket = null;
 
-            while (true) {
-                System.out.println("Waiting for input from client...");
-                input = in.readLine();
-                System.out.println("Recieved data from client: " + input);
-
-                if (input.equals("quit")) {
-                    out.println("Goodbye!\n");
-                    break;
-                }
-
-
-                out.println("Echo: " + input);
-            }
-
+        // Create a server socket to begin listening on the port
+        try {
+            serverSocket = new ServerSocket(port);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
+        }
+
+        // keep accepting new clients and spawn new threads to handle them
+        int n = 0; // keep track of number of clients
+        while (true) {
+
+            Socket clientSocket = null;
+
+            // get a socket connection
+            try {
+                clientSocket = serverSocket.accept();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.err.println("Exception occured while trying to accept a new client");
+            }
+
+            if (clientSocket != null) {
+                new Thread(new ClientHandler(clientSocket, n)).start();
+                n++;
+            }
+
         }
 
     }
