@@ -9,7 +9,7 @@ import java.net.Socket;
  */
 public class Server implements Runnable {
 
-    private int port = 4444;
+    private int port = 6667;
 
     private MessageBroadcaster broadcaster;
     private MessageQueue messageQueue;

@@ -15,7 +15,7 @@ public class MessageBroadcaster implements Runnable {
 
     private final MessageQueue queue;
 
-    final List<ClientHandler> handlerList; // list of client handlers
+    private final List<ClientHandler> handlerList; // list of client handlers
 
 
     public MessageBroadcaster(MessageQueue q) {
@@ -55,26 +55,29 @@ public class MessageBroadcaster implements Runnable {
 
                         List<ClientHandler> closedClients = new ArrayList<>();
 
-                        for (ClientHandler h : handlerList) {
+                        synchronized (handlerList) { // make sure another thread does not change the list while we iterate over it
+                            for (ClientHandler h : handlerList) {
 
-                            if (h.closed()) {
-                                // ignore closed connections and remove them from the queue
-                                System.out.println("Removed old client " + h.getClientID());
-                                NickRegistrar.getInstance().removeNick(h.getNick());
-                                closedClients.add(h);
-                                continue;
+                                if (h.closed()) {
+                                    // ignore closed connections and remove them from the queue
+                                    System.out.println("Removed old client " + h.getClientID());
+                                    NickRegistrar.getInstance().removeNick(h.getNick());
+                                    closedClients.add(h);
+                                    continue;
+                                }
+
+                                // don't broadcast back to sender
+                                if (h.getClientID() != message.getClientID()) {
+                                    System.out.println("Broadcasting message to " + h.getClientID());
+                                    h.receive(message);
+                                }
                             }
 
-                            // don't broadcast back to sender
-                            if (h.getClientID() != message.getClientID()) {
-                                System.out.println("Broadcasting message to " + h.getClientID());
-                                h.receive(message);
-                            }
-                        }
 
-                        // prune the closed clients
-                        for (ClientHandler h : closedClients) {
-                            removeHandler(h);
+                            // remove the closed clients
+                            for (ClientHandler h : closedClients) {
+                                removeHandler(h);
+                            }
                         }
                     }
                 }

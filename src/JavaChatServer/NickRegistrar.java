@@ -13,14 +13,14 @@ public class NickRegistrar {
 
     private static NickRegistrar registrar = null;
 
-    protected NickRegistrar() {
+    private NickRegistrar() {
 
     }
 
-    private List<String> nickList = Collections.synchronizedList(new ArrayList<String>());
+    private final List<String> nickList = Collections.synchronizedList(new ArrayList<String>());
 
 
-    public static NickRegistrar getInstance() {
+    public synchronized static NickRegistrar getInstance() {
         if (registrar == null) {
             registrar = new NickRegistrar();
         }
@@ -32,31 +32,35 @@ public class NickRegistrar {
      * refuses to add and returns false.
      */
     public boolean addNick(String nick) {
-
-        if (!exists(nick)) {
-            nickList.add(nick);
-            return true;
-        } else {
-            return false;
+        synchronized (nickList) {
+            if (!exists(nick)) {
+                nickList.add(nick);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
     public boolean removeNick(String nick) {
-        if (exists(nick)) {
-            nickList.remove(nick);
-            return true;
-        } else {
-            return false;
+        synchronized (nickList) {
+            if (exists(nick)) {
+                nickList.remove(nick);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
     public boolean exists(String nick) {
-        for (String n : nickList) {
-            if (n.equalsIgnoreCase(nick)) {
-                return true;
+        synchronized (nickList) {
+            for (String n : nickList) {
+                if (n.equalsIgnoreCase(nick)) {
+                    return true;
+                }
             }
         }
-
         return false;
     }
 
