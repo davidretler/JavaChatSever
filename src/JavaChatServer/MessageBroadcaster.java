@@ -27,6 +27,11 @@ public class MessageBroadcaster implements Runnable {
         handlerList.add(h);
     }
 
+    public void removeHandler(ClientHandler clientHandler) {
+        System.out.println("Removing client " + clientHandler.getClientID() + " from broadcaster");
+        handlerList.remove(clientHandler);
+    }
+
     public void broadcast(Message m) {
         queue.broadcast(m);
     }
@@ -47,8 +52,29 @@ public class MessageBroadcaster implements Runnable {
                         }
                     } else {
                         // give each client handler a copy of the message
+
+                        List<ClientHandler> closedClients = new ArrayList<>();
+
                         for (ClientHandler h : handlerList) {
-                            h.receive(message);
+
+                            if (h.closed()) {
+                                // ignore closed connections and remove them from the queue
+                                System.out.println("Removed old client " + h.getClientID());
+                                NickRegistrar.getInstance().removeNick(h.getNick());
+                                closedClients.add(h);
+                                continue;
+                            }
+
+                            // don't broadcast back to sender
+                            if (h.getClientID() != message.getClientID()) {
+                                System.out.println("Broadcasting message to " + h.getClientID());
+                                h.receive(message);
+                            }
+                        }
+
+                        // prune the closed clients
+                        for (ClientHandler h : closedClients) {
+                            removeHandler(h);
                         }
                     }
                 }
@@ -56,4 +82,6 @@ public class MessageBroadcaster implements Runnable {
         }).start();
 
     }
+
+
 }

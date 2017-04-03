@@ -56,7 +56,6 @@ public class Server implements Runnable {
             if (clientSocket != null) {
                 System.out.println("New client (" + n + ") accepted.");
                 ClientHandler handler = new ClientHandler(clientSocket, n, broadcaster);
-                broadcaster.addHandlder(handler);
                 new Thread(handler).start();
                 n++;
             }
