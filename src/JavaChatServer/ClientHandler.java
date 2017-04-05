@@ -128,6 +128,25 @@ public class ClientHandler implements Runnable {
                                 String channel = input.split(" ")[1];
                                 if (channel.startsWith(("#"))) {
                                     broadcaster.joinChannel(ClientHandler.this, channel);
+
+                                    // :dsfsdfsf!~dasdasd@174.141.133.200 JOIN #test
+                                    out.println(":" + nick + "!~" + "david" + "@127.0.0.1" + " JOIN " + channel);
+
+                                    // :card.freenode.net 332 dsfsdfsf #test :Welcome to freenode's test channel
+                                    out.println(":JavaChatServer 332 " + nick + " " + channel + " :test");
+
+                                    // :card.freenode.net 333 dsfsdfsf #test sysdef!sysdef@debiancenter/founder.developer/pdpc.professional.sysdef 1348399912
+                                    out.println(":JavaChatServer 333 " + nick + " " + channel + " random stuff here");
+
+                                    // :niven.freenode.net 353 sdfsdfsadfawefd * ##linux :sdfsdfsadfawefd fenix_br tanuki abirchall Kundry_Wag piggah_ MRiddickW waco enterprisey bertman skweek l__ dayid Vyrus001 internauto Mateon1_ hagridaaron gigetoo KindOne dirtyroshi rulezzz desti Tipping_Fedora p71 bigbadjudas janof vonsyd0w Anonaly dishaze fassl____ MystaMax gregor2_ phatm1ike_ zchrykng uks insker xdexter Muyfret slack_ obZen s3n energizer Ninetou dj_pi markasoftware badpixel fstd WinterBluFox i8igmac CapsAdmin minimalism Flynnn
+                                    out.print(":JavaChatServer 353 " + nick + " @ " + channel + " :" + nick);
+                                    for (String member : broadcaster.getMembers(channel)) {
+                                        out.print(" " + member);
+                                    }
+                                    out.println();
+                                    // :card.freenode.net 366 dsfsdfsf #test :End of /NAMES list.
+                                    out.println(":JavaChatServer 366 " + nick + " " + channel + " :End of /NAMES list.");
+
                                 }
                             }
 

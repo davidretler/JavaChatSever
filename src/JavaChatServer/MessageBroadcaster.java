@@ -152,4 +152,18 @@ public class MessageBroadcaster implements Runnable {
     }
 
 
+    public List<String> getMembers(String channel) {
+        List<String> memebers = new ArrayList<>();
+        List<ClientHandler> memberList = channelMembers.get(channel);
+        synchronized (memberList) {
+            if (memberList == null) {
+                return new ArrayList<>();
+            } else {
+                for (ClientHandler h : memberList) {
+                    memebers.add(h.getNick());
+                }
+            }
+        }
+        return memebers;
+    }
 }
