@@ -1,8 +1,6 @@
 package JavaChatServer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Keeps track of all the client handler threads and broadcasts new messages to them
@@ -17,18 +15,42 @@ public class MessageBroadcaster implements Runnable {
 
     private final List<ClientHandler> handlerList; // list of client handlers
 
+    private final Map<String, List<ClientHandler>> channelMembers; // list of the channels subscribed to by each client
+
 
     public MessageBroadcaster(MessageQueue q) {
         this.queue = q;
         handlerList = Collections.synchronizedList(new ArrayList<ClientHandler>());
+        channelMembers = Collections.synchronizedMap(new HashMap<String, List<ClientHandler>>());
     }
 
     public void addHandlder(ClientHandler h) {
         handlerList.add(h);
     }
 
+    public void joinChannel(ClientHandler h, String channel) {
+
+        System.out.println("Client wants to join " + channel);
+
+        List<ClientHandler> memberList = channelMembers.get(channel);
+
+        if (memberList == null) {
+            System.out.println("First member for " + channel + " has joined!");
+            channelMembers.put(channel, new ArrayList<>());
+            memberList = channelMembers.get(channel);
+        }
+
+        memberList.add(h);
+    }
+
     public void removeHandler(ClientHandler clientHandler) {
         System.out.println("Removing client " + clientHandler.getClientID() + " from broadcaster");
+
+        // remove from all channels subscribed to
+        for (List<ClientHandler> l : channelMembers.values()) {
+            l.remove(clientHandler);
+        }
+        // remove from server wide handler list
         handlerList.remove(clientHandler);
     }
 
@@ -51,37 +73,80 @@ public class MessageBroadcaster implements Runnable {
                             e.printStackTrace();
                         }
                     } else {
+
                         // give each client handler a copy of the message
 
                         List<ClientHandler> closedClients = new ArrayList<>();
+                        List<ClientHandler> recipients = new ArrayList();
 
-                        synchronized (handlerList) { // make sure another thread does not change the list while we iterate over it
-                            for (ClientHandler h : handlerList) {
+                        if (message.getRecipient() == null) {
 
-                                if (h.closed()) {
-                                    // ignore closed connections and remove them from the queue
-                                    System.out.println("Removed old client " + h.getClientID());
-                                    NickRegistrar.getInstance().removeNick(h.getNick());
-                                    closedClients.add(h);
-                                    continue;
-                                }
+                            // broadcast to all users
 
-                                // don't broadcast back to sender
-                                if (h.getClientID() != message.getClientID()) {
-                                    System.out.println("Broadcasting message to " + h.getClientID());
-                                    h.receive(message);
+                            synchronized (handlerList) { // make sure another thread does not change the list while we iterate over it
+                                for (ClientHandler h : handlerList) {
+
+                                    if (h.closed()) {
+                                        // ignore closed connections and remove them from the queue
+                                        System.out.println("Removed old client " + h.getClientID());
+                                        NickRegistrar.getInstance().removeNick(h.getNick());
+                                        closedClients.add(h);
+                                        continue;
+                                    }
+
+                                    // don't broadcast back to sender
+                                    if (h.getClientID() != message.getClientID()) {
+
+                                        recipients.add(h);
+                                    }
                                 }
                             }
 
 
-                            // remove the closed clients
-                            for (ClientHandler h : closedClients) {
-                                removeHandler(h);
+                        } else if (message.getRecipient().startsWith("#")) {
+                            // send to all users in the channel
+
+                            String channel = message.getRecipient();
+                            List<ClientHandler> members = channelMembers.get(channel);
+
+                            if (members == null) {
+                                // there are no members...
+                                System.err.println(channel + " has no memebers...");
+                            } else {
+
+                                for (ClientHandler h : members) {
+
+                                    if (h.closed()) {
+                                        // ignore closed connections and remove them from the queue
+                                        NickRegistrar.getInstance().removeNick(h.getNick());
+                                        closedClients.add(h);
+                                        continue;
+                                    }
+
+                                    // don't broadcast back to sender
+                                    if (h.getClientID() != message.getClientID()) {
+                                        recipients.add(h);
+                                    }
+                                }
                             }
+
+                        }
+
+                        // remove the closed clients
+                        for (ClientHandler h : closedClients) {
+                            removeHandler(h);
+                        }
+
+                        for (ClientHandler h : recipients) {
+
+                            System.out.println("Broadcasting message to " + h.getClientID());
+                            h.receive(message);
+
                         }
                     }
                 }
             }
+
         }).start();
 
     }

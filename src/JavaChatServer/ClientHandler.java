@@ -108,18 +108,36 @@ public class ClientHandler implements Runnable {
 
                         System.out.println("Recieved data from client " + id + ": " + input);
 
+                        String command = input.split(" ")[0];
 
-                        if (input.equals("quit")) {
+                        if (command.equalsIgnoreCase("quit")) {
                             out.println("Goodbye!\n");
                             close();
                             break;
+                        } else if (command.equalsIgnoreCase("privmsg")) {
+
+                            if (input.split(" ").length >= 3) {
+                                String recipient = input.split(" ")[1];
+                                String message = input.substring(input.indexOf(recipient) + recipient.length());
+
+                                broadcaster.broadcast(new Message(message, id, nick, recipient));
+                            }
+                        } else if (command.equalsIgnoreCase("join")) {
+
+                            if (input.split(" ").length == 2) {
+                                String channel = input.split(" ")[1];
+                                if (channel.startsWith(("#"))) {
+                                    broadcaster.joinChannel(ClientHandler.this, channel);
+                                }
+                            }
+
                         } else {
                             // echo data back to client
                             //out.println("Echo: " + input);
 
                             // broadcast message
                             System.out.println("Broadcasting message from client " + id);
-                            Message m = new Message(input, id, nick);
+                            Message m = new Message(input, id, nick, null);
                             broadcaster.broadcast(m);
                         }
                     }
