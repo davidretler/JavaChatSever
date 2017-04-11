@@ -1,7 +1,7 @@
 package JavaChatServer.Model;
 
-import Controller.ClientHandler;
-import Controller.MessageBroadcaster;
+import JavaChatServer.Controller.ClientHandler;
+import JavaChatServer.Controller.MessageBroadcaster;
 
 import java.util.List;
 

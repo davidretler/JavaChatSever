@@ -1,4 +1,4 @@
-import Controller.ServerThread;
+import JavaChatServer.Controller.ServerThread;
 import JavaChatServer.Model.Server;
 
 /**

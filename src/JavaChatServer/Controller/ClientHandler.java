@@ -1,4 +1,4 @@
-package Controller;
+package JavaChatServer.Controller;
 
 import JavaChatServer.Model.*;
 
