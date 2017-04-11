@@ -4,20 +4,24 @@ package JavaChatServer;
  * Message class
  * Created by david on 4/1/17.
  */
-public class Message {
+public abstract class Message {
 
     private int clientID;       // id of client who sent the message
-    private String clientNick;  // nickname of the client
     private String message;     // message text
     private String recipient;   // the recipient of the message (null if broadcast to all users).
     // may be a channel or user (if channel it will start with #)
+    private boolean echo;       // should this message be echo'd back to the sender?
 
 
-    public Message(String message, int clientID, String nick, String recipient) {
+    public Message(String message, int clientID, String recipient) {
+        this(message, clientID, recipient, false);
+    }
+
+    public Message(String message, int clientID, String recipient, boolean echo) {
         this.clientID = clientID;
         this.message = message;
-        this.clientNick = nick;
         this.recipient = recipient;
+        this.echo = echo;
     }
 
     public int getClientID() {
@@ -28,11 +32,13 @@ public class Message {
         return message;
     }
 
-    public String getClientNick() {
-        return clientNick;
-    }
-
     public String getRecipient() {
         return recipient;
     }
+
+    public boolean isEcho() {
+        return echo;
+    }
+
+    public abstract String getPrefix();
 }

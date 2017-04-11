@@ -95,8 +95,7 @@ public class MessageBroadcaster implements Runnable {
                                     }
 
                                     // don't broadcast back to sender
-                                    if (h.getClientID() != message.getClientID()) {
-
+                                    if (h.getClientID() != message.getClientID() || message.isEcho()) {
                                         recipients.add(h);
                                     }
                                 }
@@ -124,7 +123,7 @@ public class MessageBroadcaster implements Runnable {
                                     }
 
                                     // don't broadcast back to sender
-                                    if (h.getClientID() != message.getClientID()) {
+                                    if (h.getClientID() != message.getClientID() || message.isEcho()) {
                                         recipients.add(h);
                                     }
                                 }

@@ -1,66 +1,70 @@
 package JavaChatServer;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.List;
 
 /**
- * Created by david on 3/29/17.
+ * Created by david on 4/11/17.
  */
-public class Server implements Runnable {
-
-    private int port = 6667;
+public class Server {
 
     private MessageBroadcaster broadcaster;
     private MessageQueue messageQueue;
+    private String serverName = "JavaChatServer";
 
     public Server() {
         messageQueue = new MessageQueue();
         broadcaster = new MessageBroadcaster(messageQueue);
     }
 
-    public void run() {
-        System.out.println("Starting server");
+    public MessageBroadcaster getBroadcaster() {
+        return broadcaster;
+    }
+
+    public void addHandlder(ClientHandler clientHandler) {
+        broadcaster.addHandlder(clientHandler);
+    }
+
+    public void broadcast(Message message) {
+        broadcaster.broadcast(message);
+    }
+
+    public void joinChannel(ClientHandler handler, String channel) {
+
+        // add the user to the channel
+        broadcaster.joinChannel(handler, channel);
+
+        User user = handler.getUser();
+
+        // alert all members of the channel that the user has joined (by sending a message to the channel)
+        Message joinMessage = new ClientMessage("JOIN " + channel, handler.getClientID(), user, channel);
+        handler.receive(joinMessage);           // echo back
+        broadcaster.broadcast(joinMessage);
+
+        // display topic
+        handler.receive(new ServerMessage("332 " + user.getNick() + " " + channel + " :Topic not yet implemented", this));
+
+        // display creator of topic
+        handler.receive(new ServerMessage("333 " + user.getNick() + " " + channel + " :Topic not yet implemented", this));
+
+        // display list of users
+        String usersMessage = "353 " + user.getNick() + " @ " + channel + " :";
+        String userList = String.join(" ", getMembers(channel));
+
+        handler.receive(new ServerMessage(usersMessage + userList, this));
+        handler.receive(new ServerMessage("366 " + user.getNick() + " " + channel + " :End of /NAMES list.", this));
 
 
-        System.out.println("Creating message broadcaster thread");
-        new Thread(broadcaster).start();
+    }
 
+    public void removeHandler(ClientHandler clientHandler) {
+        broadcaster.removeHandler(clientHandler);
+    }
 
-        System.out.println("Listening for clients on port " + port);
-        ServerSocket serverSocket = null;
+    public List<String> getMembers(String channel) {
+        return broadcaster.getMembers(channel);
+    }
 
-        // Create a server socket to begin listening on the port
-        try {
-            serverSocket = new ServerSocket(port);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // keep accepting new clients and spawn new threads to handle them
-
-        int n = 0; // keep track of number of clients
-        while (true) {
-
-            Socket clientSocket = null;
-
-            // get a socket connection
-            try {
-                clientSocket = serverSocket.accept();
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.err.println("Exception occured while trying to accept a new client");
-            }
-
-            if (clientSocket != null) {
-                System.out.println("New client (" + n + ") accepted.");
-                ClientHandler handler = new ClientHandler(clientSocket, n, broadcaster);
-                new Thread(handler).start();
-                n++;
-            }
-
-        }
-
+    public String getServerName() {
+        return serverName;
     }
 }
