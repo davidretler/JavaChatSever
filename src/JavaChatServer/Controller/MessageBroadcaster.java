@@ -117,22 +117,35 @@ public class MessageBroadcaster implements Runnable {
                                 System.err.println(channel + " has no memebers...");
                             } else {
 
-                                for (ClientHandler h : members) {
+                                synchronized (members) {
+                                    for (ClientHandler h : members) {
 
-                                    if (h.closed()) {
-                                        // ignore closed connections and remove them from the queue
-                                        NickRegistrar.getInstance().removeNick(h.getNick());
-                                        closedClients.add(h);
-                                        continue;
-                                    }
+                                        if (h.closed()) {
+                                            // ignore closed connections and remove them from the queue
+                                            NickRegistrar.getInstance().removeNick(h.getNick());
+                                            closedClients.add(h);
+                                            continue;
+                                        }
 
-                                    // don't broadcast back to sender
-                                    if (h.getClientID() != message.getClientID() || message.isEcho()) {
-                                        recipients.add(h);
+                                        // don't broadcast back to sender
+                                        if (h.getClientID() != message.getClientID() || message.isEcho()) {
+                                            recipients.add(h);
+                                        }
                                     }
                                 }
                             }
 
+                        } else {
+                            // send to the particular user
+
+                            // find the recipient message handler
+                            synchronized (handlerList) {
+                                for (ClientHandler h : handlerList) {
+                                    if (h.getUser().getNick().equalsIgnoreCase(message.getRecipient())) {
+                                        recipients.add(h);
+                                    }
+                                }
+                            }
                         }
 
                         // remove the closed clients

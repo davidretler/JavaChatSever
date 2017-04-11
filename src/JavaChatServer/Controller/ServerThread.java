@@ -14,8 +14,6 @@ public class ServerThread implements Runnable {
 
     private int port = 6667;
 
-    private String serverName = "JavaChatServer";
-
     private Server server;
 
     public ServerThread(Server server) {
