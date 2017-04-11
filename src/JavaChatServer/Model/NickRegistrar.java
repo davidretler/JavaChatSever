@@ -1,4 +1,4 @@
-package JavaChatServer;
+package JavaChatServer.Model;
 
 import java.util.ArrayList;
 import java.util.Collections;

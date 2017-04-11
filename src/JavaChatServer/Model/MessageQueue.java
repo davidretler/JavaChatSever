@@ -1,4 +1,4 @@
-package JavaChatServer;
+package JavaChatServer.Model;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;

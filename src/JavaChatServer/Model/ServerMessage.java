@@ -1,4 +1,4 @@
-package JavaChatServer;
+package JavaChatServer.Model;
 
 /**
  * Created by david on 4/11/17.

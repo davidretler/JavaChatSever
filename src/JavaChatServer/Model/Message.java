@@ -1,4 +1,4 @@
-package JavaChatServer;
+package JavaChatServer.Model;
 
 /**
  * Message class

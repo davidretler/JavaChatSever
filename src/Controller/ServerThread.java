@@ -1,4 +1,6 @@
-package JavaChatServer;
+package Controller;
+
+import JavaChatServer.Model.Server;
 
 import java.io.IOException;
 import java.net.ServerSocket;

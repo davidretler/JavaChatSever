@@ -1,5 +1,5 @@
-import JavaChatServer.Server;
-import JavaChatServer.ServerThread;
+import Controller.ServerThread;
+import JavaChatServer.Model.Server;
 
 /**
  * Created by david on 3/29/17.

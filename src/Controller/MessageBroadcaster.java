@@ -1,4 +1,8 @@
-package JavaChatServer;
+package Controller;
+
+import JavaChatServer.Model.Message;
+import JavaChatServer.Model.MessageQueue;
+import JavaChatServer.Model.NickRegistrar;
 
 import java.util.*;
 
