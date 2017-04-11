@@ -56,7 +56,12 @@ public class Server {
         handler.receive(new ServerMessage(usersMessage + userList, this));
         handler.receive(new ServerMessage("366 " + user.getNick() + " " + channel + " :End of /NAMES list.", this));
 
+    }
 
+    public void privateMessage(ClientHandler handler, String recipient, String message) {
+
+        Message m = new ClientMessage("PRIVMSG " + recipient + " :" + message, handler.getClientID(), handler.getUser(), recipient);
+        broadcast(m);
     }
 
     public void removeHandler(ClientHandler clientHandler) {

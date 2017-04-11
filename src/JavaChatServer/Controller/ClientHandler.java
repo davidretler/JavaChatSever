@@ -101,6 +101,9 @@ public class ClientHandler implements Runnable {
                     String[] split = input.split(" ");
 
                     if (split.length == 5) {
+
+                        System.out.println("Response from " + id + " " + input);
+
                         // USER username hostname servername :realname
                         String userName = split[1];
                         String hostName = split[2];
@@ -146,17 +149,21 @@ public class ClientHandler implements Runnable {
                         } else if (command.equalsIgnoreCase("privmsg")) {
 
                             if (input.split(" ").length >= 3) {
-                                String recipient = input.split(" ")[1];
-                                String message = input.substring(input.indexOf(recipient) + recipient.length());
 
-                                server.broadcast(new ClientMessage(message, id, user, recipient));
+                                String[] split = input.split(" ");
+
+                                String recipient = split[1];
+
+                                if (split[2].startsWith(":")) {
+                                    String message = input.substring(input.indexOf(":") + 1);
+                                    server.privateMessage(ClientHandler.this, recipient, message);
+                                }
                             }
                         } else if (command.equalsIgnoreCase("join")) {
 
                             if (input.split(" ").length == 2) {
                                 String channel = input.split(" ")[1];
                                 if (channel.startsWith(("#"))) {
-
                                     server.joinChannel(ClientHandler.this, channel);
                                 }
                             }

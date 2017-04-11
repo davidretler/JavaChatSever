@@ -17,6 +17,6 @@ public class ClientMessage extends Message {
     }
 
     public String getPrefix() {
-        return ":" + user.getNick() + "!" + user.getUserName() + "@" + user.getHostName();
+        return ":" + user.getNick() + "!" + user.getUserName() + "@" + user.getServerName();
     }
 }
