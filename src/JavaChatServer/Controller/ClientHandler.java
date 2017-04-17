@@ -125,9 +125,11 @@ public class ClientHandler implements Runnable {
             return;
         }
 
+        server.welcome(this);
 
         // add this client to the broadcaster once we have initiaized
         server.addHandlder(this);
+
 
         // keep listening for input asynchronously
         listenThread = new StoppableThread() {
@@ -210,7 +212,7 @@ public class ClientHandler implements Runnable {
 
                         String m = message.getPrefix() + " " + message.getMessageText();
 
-                        out.println(m);
+                        out.println("Message to " + id + ": " + m);
 
                     } else {
                         try {

@@ -31,6 +31,12 @@ public class Server {
         broadcaster.broadcast(message);
     }
 
+    public void welcome(ClientHandler client) {
+
+        client.receive(new ServerMessage("001 " + client.getNick() + " :" + this.getWelcomeMessage(), this));
+
+    }
+
     public void joinChannel(ClientHandler handler, String channel) {
 
         // add the user to the channel
@@ -74,5 +80,9 @@ public class Server {
 
     public String getServerName() {
         return serverName;
+    }
+
+    public String getWelcomeMessage() {
+        return "Welcome to " + serverName;
     }
 }
