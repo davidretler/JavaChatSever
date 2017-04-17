@@ -23,10 +23,12 @@ public class ClientHandler implements Runnable {
     private Server server;
 
     //private String nick = null;
-    private User user = null;
+    User user = null;
 
     private PrintWriter out;
     private BufferedReader in;
+
+    StoppableThread listenThread, broadcastThread;
 
     ClientHandler(Socket socket, int n, Server s) {
         this.clientSocket = socket;
@@ -52,11 +54,10 @@ public class ClientHandler implements Runnable {
         // make sure we dont run if the constructor failed to get input and output streams for the socket
         if (out == null || in == null) return;
 
+        String nick = null;
+
         // initialize the connection by getting NICK and USER information
         try {
-
-            // initiate by waiting for the user to indicate a nickname
-            String nick = null;
 
             out.println("Welcome to the chat server. Please choose a nickname by typing \"NICK <your nickname>\"");
 
@@ -66,9 +67,8 @@ public class ClientHandler implements Runnable {
 
                 String input = in.readLine();
 
-                // TODO this yeilds a null pointer exception if the client closes the connection after readLine()
-                // was called above. Fix this (Really it's fine... the clinet handler will crash but the connection was
-                // closed already and this doesn't affect any other threads)
+                if (input == null) throw new IOException("Client disconnected before choosing nick");
+
                 if (input.toLowerCase().startsWith("nick")) {
                     String[] split = input.split(" ");
 
@@ -96,6 +96,7 @@ public class ClientHandler implements Runnable {
                 System.out.println("Waiting for client " + id + " to indicate user information");
 
                 String input = in.readLine();
+                if (in == null) throw new IOException("Client disconnected before providing user information");
 
                 if (input.toLowerCase().startsWith("user")) {
                     String[] split = input.split(" ");
@@ -117,6 +118,10 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Failed to initialize client");
+            if (user == null) {
+                NickRegistrar.getInstance().removeNick(nick);
+            }
+            ClientHandler.this.disconnect();
             return;
         }
 
@@ -125,12 +130,13 @@ public class ClientHandler implements Runnable {
         server.addHandlder(this);
 
         // keep listening for input asynchronously
-        new Thread(new Runnable() {
+        listenThread = new StoppableThread() {
+
             @Override
             public void run() {
 
                 try {
-                    while (true) {
+                    while (!finished) {
                         System.out.println("Waiting for input from client " + id + "...");
                         String input = in.readLine();
 
@@ -144,7 +150,7 @@ public class ClientHandler implements Runnable {
 
                         if (command.equalsIgnoreCase("quit")) {
                             out.println("Goodbye!\n");
-                            close();
+                            ClientHandler.this.disconnect();
                             break;
                         } else if (command.equalsIgnoreCase("privmsg")) {
 
@@ -178,18 +184,25 @@ public class ClientHandler implements Runnable {
                             server.broadcast(m);
                         }
                     }
+
+                    System.out.println("Listen thread for " + id + " finished.");
+
                 } catch (IOException e) {
                     e.printStackTrace();
+                    ClientHandler.this.disconnect();
                 }
             }
-        }).start();
+        };
+
+        listenThread.start();
 
         // relay broadcasted message asynchronously
-        new Thread(new Runnable() {
+        broadcastThread = new StoppableThread() {
+
             @Override
             public void run() {
 
-                while (true) {
+                while (!finished) {
                     Message message = queue.consume();
 
                     if (message != null) {
@@ -208,8 +221,11 @@ public class ClientHandler implements Runnable {
                     }
                 }
 
+                System.out.println("Broadcast thread for " + id + " finished.");
             }
-        }).start();
+        };
+
+        broadcastThread.start();
     }
 
     // Receive message
@@ -230,13 +246,29 @@ public class ClientHandler implements Runnable {
         return clientSocket.isClosed() || out.checkError();
     }
 
-    public void close() {
+    private void disconnect() {
+
+        if (user != null && getNick() != null) {
+            // allow other users to use this nickname now
+            listenThread.stopThread();
+            broadcastThread.stopThread();
+
+            NickRegistrar.getInstance().removeNick(getNick());
+
+        }
+
+        close();
+    }
+
+    private void close() {
         try {
             clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        NickRegistrar.getInstance().removeNick(user.getNick());
+        if (user != null) {
+            NickRegistrar.getInstance().removeNick(user.getNick());
+        }
         server.removeHandler(this);
     }
 
