@@ -177,7 +177,11 @@ public class ClientHandler implements Runnable {
 
                                 if (split[2].startsWith(":")) {
                                     String message = input.substring(input.indexOf(":") + 1);
-                                    server.privateMessage(ClientHandler.this, recipient, message);
+                                    try {
+                                        server.privateMessage(ClientHandler.this, recipient, message);
+                                    } catch (IRCCommandException e) {
+                                        ClientHandler.this.receive(new ServerMessage("404 " + getNick() + " " + recipient + " :" + e.getMessage(), server));
+                                    }
                                 }
                             }
                         } else if (command.equalsIgnoreCase("join")) {
@@ -209,7 +213,6 @@ public class ClientHandler implements Runnable {
                             } else {
                                 System.err.println("Error, needs to specify channel to part from in message \"" + input + "\"");
                             }
-
                         } else {
                             // echo data back to client
                             //out.println("Echo: " + input);

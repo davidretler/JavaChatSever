@@ -204,4 +204,12 @@ public class MessageBroadcaster implements Runnable {
             members.remove(client);
         }
     }
+
+    public boolean isMember(ClientHandler handler, String channel) {
+        if (channelMembers.get(channel) != null) {
+            return channelMembers.get(channel).contains(handler);
+        } else {
+            return false;
+        }
+    }
 }

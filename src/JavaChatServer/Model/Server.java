@@ -68,10 +68,20 @@ public class Server {
         handler.receive(new ServerMessage("366 " + handler.getUser().getNick() + " " + channel + " :End of /NAMES list.", this));
     }
 
-    public void privateMessage(ClientHandler handler, String recipient, String message) {
+    public void privateMessage(ClientHandler handler, String recipient, String message) throws IRCCommandException {
 
+        if (recipient.startsWith("#")) {
+            // recipient is a channel... make sure user is a member
+            if (!isMember(handler, recipient)) {
+                throw new IRCCommandException("Cannot send to channel");
+            }
+        }
         Message m = new ClientMessage("PRIVMSG " + recipient + " :" + message, handler.getClientID(), handler.getUser(), recipient);
         broadcast(m);
+    }
+
+    private boolean isMember(ClientHandler handler, String channel) {
+        return broadcaster.isMember(handler, channel);
     }
 
     public void quit(ClientHandler client, String reason) {
