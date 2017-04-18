@@ -13,7 +13,6 @@ import java.util.*;
 public class MessageBroadcaster implements Runnable {
 
     private final int timeout = 100; // time to wait between attempted broadcasts, in ms
-    private final int ns_to_ms = 1000;
 
     private final MessageQueue queue;
 
@@ -180,5 +179,22 @@ public class MessageBroadcaster implements Runnable {
             }
         }
         return memebers;
+    }
+
+    // Get all channels a particular client is in
+    public List<String> getChannels(ClientHandler client) {
+
+        List<String> channels = new ArrayList<String>();
+
+        synchronized (channelMembers) {
+            for (String channel : channelMembers.keySet()) {
+                Collection<ClientHandler> clients = channelMembers.get(channel);
+                if (clients.contains(client)) {
+                    channels.add(channel);
+                }
+            }
+        }
+
+        return channels;
     }
 }

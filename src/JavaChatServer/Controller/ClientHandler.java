@@ -175,15 +175,26 @@ public class ClientHandler implements Runnable {
                                     server.joinChannel(ClientHandler.this, channel);
                                 }
                             }
+                        } else if (command.equalsIgnoreCase("who")) {
 
-                        } else {
+                            if (input.split(" ").length == 2) {
+                                String channel = input.split(" ")[1];
+                                if (channel.startsWith("#")) {
+                                    server.displayUsers(ClientHandler.this, channel);
+                                }
+                            }
+                        }
+                        //TODO: Implement quit and part.
+                        else {
                             // echo data back to client
                             //out.println("Echo: " + input);
 
                             // broadcast message
-                            System.out.println("Broadcasting message from client " + id);
-                            Message m = new ClientMessage(input, id, user, null);
-                            server.broadcast(m);
+                            //System.out.println("Broadcasting message from client " + id);
+                            //Message m = new ClientMessage(input, id, user, null);
+                            //server.broadcast(m);
+
+                            System.err.println("Do not know how to handle message: " + input + " from " + id);
                         }
                     }
 
@@ -212,7 +223,9 @@ public class ClientHandler implements Runnable {
 
                         String m = message.getPrefix() + " " + message.getMessageText();
 
-                        out.println("Message to " + id + ": " + m);
+                        out.println(m);
+
+                        System.out.println("Message to " + id + ": " + m);
 
                     } else {
                         try {
@@ -254,8 +267,9 @@ public class ClientHandler implements Runnable {
             // allow other users to use this nickname now
             listenThread.stopThread();
             broadcastThread.stopThread();
-
+            server.quit(this, "Disconnected.");
             NickRegistrar.getInstance().removeNick(getNick());
+
 
         }
 

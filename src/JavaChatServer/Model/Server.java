@@ -55,19 +55,30 @@ public class Server {
         // display creator of topic
         handler.receive(new ServerMessage("333 " + user.getNick() + " " + channel + " :Topic not yet implemented", this));
 
+        displayUsers(handler, channel);
+
+    }
+
+    public void displayUsers(ClientHandler handler, String channel) {
         // display list of users
-        String usersMessage = "353 " + user.getNick() + " @ " + channel + " :";
+        String usersMessage = "353 " + handler.getUser().getNick() + " @ " + channel + " :";
         String userList = String.join(" ", getMembers(channel));
 
         handler.receive(new ServerMessage(usersMessage + userList, this));
-        handler.receive(new ServerMessage("366 " + user.getNick() + " " + channel + " :End of /NAMES list.", this));
-
+        handler.receive(new ServerMessage("366 " + handler.getUser().getNick() + " " + channel + " :End of /NAMES list.", this));
     }
 
     public void privateMessage(ClientHandler handler, String recipient, String message) {
 
         Message m = new ClientMessage("PRIVMSG " + recipient + " :" + message, handler.getClientID(), handler.getUser(), recipient);
         broadcast(m);
+    }
+
+    public void quit(ClientHandler client, String reason) {
+        for (String channel : broadcaster.getChannels(client)) {
+            Message m = new ClientMessage("QUIT :" + reason, client.getClientID(), client.getUser(), channel);
+            broadcast(m);
+        }
     }
 
     public void removeHandler(ClientHandler clientHandler) {

@@ -7,7 +7,7 @@ package JavaChatServer.Controller;
  */
 public class StoppableThread extends Thread {
 
-    public volatile boolean finished = false;
+    volatile boolean finished = false;
 
     public StoppableThread() {
 
@@ -15,11 +15,6 @@ public class StoppableThread extends Thread {
 
     public void stopThread() {
         finished = true;
-    }
-
-    public StoppableThread(Runnable task) {
-        super(task);
-        start();
     }
 
 }
