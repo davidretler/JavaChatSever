@@ -81,6 +81,18 @@ public class Server {
         }
     }
 
+    public void part(ClientHandler client, String channel, String reason) {
+        // message notifying clients that this client has left the channel
+        Message m = new ClientMessage("PART " + channel + " :" + reason, client.getClientID(), client.getUser(), channel, true);
+
+        // echo message to client so they have confirmation this worked
+        client.receive(m);
+        // remove client from channel
+        broadcaster.partChannel(client, channel);
+        // notify all other members of the channel
+        broadcaster.broadcast(m);
+    }
+
     public void removeHandler(ClientHandler clientHandler) {
         broadcaster.removeHandler(clientHandler);
     }

@@ -197,4 +197,11 @@ public class MessageBroadcaster implements Runnable {
 
         return channels;
     }
+
+    public void partChannel(ClientHandler client, String channel) {
+        synchronized (channelMembers) {
+            List<ClientHandler> members = channelMembers.get(channel);
+            members.remove(client);
+        }
+    }
 }

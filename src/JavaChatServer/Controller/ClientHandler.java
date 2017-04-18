@@ -121,7 +121,7 @@ public class ClientHandler implements Runnable {
             if (user == null) {
                 NickRegistrar.getInstance().removeNick(nick);
             }
-            ClientHandler.this.disconnect();
+            ClientHandler.this.disconnect("Failed to initialize.");
             return;
         }
 
@@ -148,11 +148,24 @@ public class ClientHandler implements Runnable {
 
                         System.out.println("Recieved data from client " + id + ": " + input);
 
+
+                        // TODO: refactor this so command is parsed in its own class
+                        // probably should make a command class and have all specific commands be subclass of the command class
                         String command = input.split(" ")[0];
 
                         if (command.equalsIgnoreCase("quit")) {
-                            out.println("Goodbye!\n");
-                            ClientHandler.this.disconnect();
+
+                            String reason = null;
+                            if (input.split(" ").length >= 2) {
+                                reason = input.split(" ")[1];
+                                if (reason.charAt(0) == ':') {
+                                    reason = input.substring(input.indexOf(":") + 1);
+                                } else {
+                                    reason = null;
+                                    System.err.println("Reason formatted incorrectly in message \"" + input + "\"");
+                                }
+                            }
+                            disconnect(reason != null ? reason : "No Reason.");
                             break;
                         } else if (command.equalsIgnoreCase("privmsg")) {
 
@@ -183,9 +196,21 @@ public class ClientHandler implements Runnable {
                                     server.displayUsers(ClientHandler.this, channel);
                                 }
                             }
-                        }
-                        //TODO: Implement quit and part.
-                        else {
+                        } else if (command.equalsIgnoreCase("part")) {
+                            String[] split = input.split(" ");
+                            String reason = null;
+                            String channel = null;
+                            if (split.length > 1) {
+                                channel = split[1];
+                                if (split.length > 2) {
+                                    reason = input.substring(input.indexOf(":") + 1);
+                                }
+                                server.part(ClientHandler.this, channel, reason);
+                            } else {
+                                System.err.println("Error, needs to specify channel to part from in message \"" + input + "\"");
+                            }
+
+                        } else {
                             // echo data back to client
                             //out.println("Echo: " + input);
 
@@ -202,7 +227,7 @@ public class ClientHandler implements Runnable {
 
                 } catch (IOException e) {
                     e.printStackTrace();
-                    ClientHandler.this.disconnect();
+                    ClientHandler.this.disconnect("Socker Error.");
                 }
             }
         };
@@ -261,16 +286,14 @@ public class ClientHandler implements Runnable {
         return clientSocket.isClosed() || out.checkError();
     }
 
-    private void disconnect() {
+    private void disconnect(String reason) {
 
         if (user != null && getNick() != null) {
             // allow other users to use this nickname now
             listenThread.stopThread();
             broadcastThread.stopThread();
-            server.quit(this, "Disconnected.");
+            server.quit(this, reason);
             NickRegistrar.getInstance().removeNick(getNick());
-
-
         }
 
         close();
